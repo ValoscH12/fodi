@@ -1229,7 +1229,7 @@ function saveMenu() {
 function deleteMenu() {
   const sel = document.getElementById('menus-select');
   const nom = sel ? sel.value : '';
-  if (!nom) { toast('⚠️ Sélectionnez d'abord un menu'); return; }
+  if (!nom) { toast('Selectionnez un menu dans la liste'); return; }
   if (!confirm(`Supprimer le menu "${nom}" ?`)) return;
   delete savedMenus[nom];
   saveMenusData();
@@ -1325,7 +1325,7 @@ function saveMenu() {
 function deleteMenu() {
   const sel = document.getElementById('menus-select');
   const nom = sel ? sel.value : '';
-  if (!nom) { toast('⚠️ Sélectionnez d'abord un menu'); return; }
+  if (!nom) { toast('Selectionnez un menu dans la liste'); return; }
   if (!confirm(`Supprimer le menu "${nom}" ?`)) return;
   delete savedMenus[nom];
   saveMenusData();
@@ -1737,24 +1737,8 @@ function renderRepas() {
   });
 
   // Résultat global
-  // result-card supprimé
-  const maxT = Math.max(...totaux);
-  if (repas.length === 0) {
-    rc.style.display = 'none';
-    rc.className = 'result-card empty';
-    rc.innerHTML = '';
-  } else if (maxT > 1) {
-    
-    const exceedants = FODMAP_SHORT.filter((_,i) => totaux[i] > 1).join(', ');
-    
-  } else if (maxT > 0.8) {
-    
-    
-  } else {
-    const hasAnyUnknown = repas.some(({aliment:a}) => (a.unknown||[]).some(v=>v));
-    
-    
-  }
+    const maxT = Math.max(...totaux);
+  // Pas de bandeau résultat — les pills suffisent
 
   // Totaux grid
   const tc = document.getElementById('totaux-card');
