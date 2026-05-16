@@ -1249,7 +1249,6 @@ function loadPhase3() {
 // ═══════════════════════════════════════════════════
 // MENUS SAUVEGARDÉS
 // ═══════════════════════════════════════════════════
-let savedMenus = {}; // {nom: {repas, diviseur}}
 
 function saveMenusData() {
   try { localStorage.setItem('fodi_menus', JSON.stringify(savedMenus)); } catch(e){}
