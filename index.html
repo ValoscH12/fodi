@@ -25,7 +25,7 @@
   --shadow:0 2px 16px rgba(0,0,0,.08);
   --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
 }
-html{font-family:var(--font);background:#f0f4f2;color:#1a2634;font-size:15px}
+html{font-family:var(--font);background:#f0f4f2;color:#1a2634;font-size:18px}
 body{min-height:100vh;padding-bottom:80px}
 
 /* ── HEADER ───────────────────────────────────────── */
@@ -79,6 +79,10 @@ body{min-height:100vh;padding-bottom:80px}
 .ing-del{background:none;border:none;cursor:pointer;color:var(--red);
   font-size:1rem;padding:2px 4px;opacity:.5;transition:opacity .2s;flex-shrink:0}
 .ing-del:hover{opacity:1}
+.ing-edit{background:none;border:none;cursor:pointer;font-size:.85rem;
+  padding:2px 4px;opacity:.5;transition:opacity .2s;flex-shrink:0}
+.ing-edit:hover{opacity:1}
+.ing-edit-row{display:flex;gap:5px;align-items:center;padding:4px 8px 8px}
 .ing-fodmap-row{display:flex;padding:2px 8px 6px;gap:3px;flex-wrap:wrap}
 .fodmap-chip{display:flex;align-items:center;gap:2px;padding:2px 5px;border-radius:4px;font-size:.68rem;font-weight:500}
 .fodmap-chip.ok{background:#f0f0f0;color:#999}
@@ -87,14 +91,13 @@ body{min-height:100vh;padding-bottom:80px}
 .fodmap-chip.always{background:var(--red);color:#fff}
 
 /* Résultat global */
-.result-card{border-radius:var(--radius-sm);padding:8px 12px;
-  display:flex;align-items:center;gap:8px;margin-bottom:8px;transition:all .3s}
-.result-card.ok{background:var(--green);color:#fff}
-.result-card.warn{background:var(--orange);color:#fff}
-.result-card.bad{background:var(--red);color:#fff}
-.result-emoji{font-size:1.2rem;flex-shrink:0}
-.result-text{font-size:.88rem;font-weight:600;flex:1}
-.result-sub{font-size:.75rem;opacity:.85}
+
+
+
+
+
+
+
 
 /* Totaux FODMAP */
 .totaux-line{display:flex;gap:4px;padding:4px 2px}
@@ -233,6 +236,16 @@ body{min-height:100vh;padding-bottom:80px}
   background:#fff;font-family:var(--font);font-size:.75rem;cursor:pointer;transition:all .2s;white-space:nowrap}
 .fodmap-filter-btn.active{color:#fff;border-color:transparent;font-weight:600}
 
+/* ── MENUS SAUVEGARDÉS ───────────────────────────── */
+.menus-row{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.menus-select{flex:1;padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-family:var(--font);font-size:.82rem;background:#fff;color:var(--grey);outline:none}
+.menus-select:focus{border-color:var(--green)}
+.btn-menu-save{padding:6px 10px;background:var(--green);color:#fff;border:none;
+  border-radius:var(--radius-sm);font-family:var(--font);font-size:.8rem;cursor:pointer;white-space:nowrap}
+.btn-menu-del{padding:6px 8px;background:var(--red-l);color:var(--red);border:1.5px solid var(--red);
+  border-radius:var(--radius-sm);font-family:var(--font);font-size:.8rem;cursor:pointer}
+
 /* ── PHASE 3 ──────────────────────────────────────── */
 .phase3-bar{background:var(--blue-l);border:1.5px solid var(--blue);border-radius:var(--radius-sm);
   padding:12px 14px;margin-bottom:12px}
@@ -312,14 +325,20 @@ body{min-height:100vh;padding-bottom:80px}
     <div class="phase3-chips" id="phase3-chips"></div>
     <div class="phase3-hint">Les FODMAPs désactivés ne sont pas comptabilisés dans l'analyse</div>
   </div>
-  <button onclick="togglePhase3()" id="phase3-toggle-btn"
-    style="width:100%;padding:8px;background:#fff;color:var(--blue);border:1.5px solid var(--blue);
-    border-radius:var(--radius-sm);font-family:var(--font);font-size:.82rem;cursor:pointer;margin-bottom:10px">
-    ⚙️ Afficher les réglages Phase 3
-  </button>
+  <div class="menus-row">
+    <button onclick="togglePhase3()" id="phase3-toggle-btn"
+      style="padding:7px 10px;background:#fff;color:var(--blue);border:1.5px solid var(--blue);
+      border-radius:var(--radius-sm);font-family:var(--font);font-size:.78rem;cursor:pointer;white-space:nowrap">
+      ⚙️ Phase 3
+    </button>
+    <select class="menus-select" id="menus-select" onchange="handleMenuSelect(this.value)">
+      <option value="">🍽️ Charger un menu…</option>
+    </select>
+    <button class="btn-menu-save" onclick="saveMenu()">💾</button>
+    <button class="btn-menu-del" onclick="deleteMenu()" title="Supprimer ce menu">🗑️</button>
+  </div>
 
-  <!-- Résultat global (caché quand vide) -->
-  <div id="result-card" style="display:none"></div>
+  <!-- Pas de bandeau résultat -->
 
   <!-- Totaux par FODMAP : ligne compacte -->
   <div id="totaux-card" style="display:none;margin-bottom:8px">
@@ -328,7 +347,6 @@ body{min-height:100vh;padding-bottom:80px}
 
   <!-- Saisie ingrédient -->
   <div class="card">
-    <div class="card-title">Ajouter un ingrédient</div>
     <div class="search-wrap" style="margin-bottom:6px">
       <span class="search-icon">🔍</span>
       <input type="text" class="search-input" id="search-input"
@@ -338,29 +356,27 @@ body{min-height:100vh;padding-bottom:80px}
              onkeydown="onSearchKey(event)">
       <div class="suggestions" id="suggestions"></div>
     </div>
-    <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
-      <input type="number" class="qty-input" id="qty-input"
-             placeholder="qté" min="0.1" max="9999" step="0.5"
-             style="flex:1;width:auto"
+    <div style="display:flex;gap:5px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
+      <input type="text" inputmode="decimal" class="qty-input" id="qty-input"
+             placeholder="Quantité" style="flex:2;min-width:80px;font-family:var(--font);font-size:.85rem"
              onkeydown="if(event.key==='Enter')addIngredient()">
       <button class="unit-btn active" onclick="setUnit('g')" id="unit-g">g</button>
       <button class="unit-btn" onclick="setUnit('u')" id="unit-u">unité</button>
       <button class="unit-btn" onclick="setUnit('cs')" id="unit-cs">cs</button>
       <button class="unit-btn" onclick="setUnit('cc')" id="unit-cc">cc</button>
       <button class="add-btn" onclick="addIngredient()" title="Ajouter">+</button>
+      <div style="display:flex;align-items:center;gap:4px;font-size:.75rem;color:var(--grey-m)">
+        <span>pour</span>
+        <input type="text" inputmode="decimal" class="div-input" id="div-input"
+               value="1" style="width:36px"
+               oninput="setDiviseur(parseFloat(this.value)||1)"
+               title="Nombre de parts">
+        <span>part(s)</span>
+      </div>
     </div>
     <div id="unit-hint-bar" style="font-size:.72rem;color:var(--grey-m);margin-bottom:4px;min-height:14px;padding-left:2px"></div>
 
-    <!-- Diviseur de portions -->
-    <div class="diviseur-bar" id="diviseur-bar" style="display:none">
-      <span class="diviseur-label">🍽️ Pour</span>
-      <input type="number" class="div-input" id="div-input"
-             value="1" min="1" max="100" step="0.5"
-             oninput="setDiviseur(parseFloat(this.value)||1)"
-             title="Nombre de parts — ex: 8 pour une recette pour 8">
-      <span class="diviseur-label">part(s)</span>
-      <span class="div-hint" id="div-label"></span>
-    </div>
+
 
     <!-- Liste des ingrédients -->
     <div id="ing-label" style="display:none"></div>
@@ -914,9 +930,9 @@ const DB_DEFAULT = [
 // ═══════════════════════════════════════════════════
 // CONSTANTES
 // ═══════════════════════════════════════════════════
-const FODMAP_NAMES = ["Fructose","Lactose","Fructanes","GOS","Sorbitol","Mannitol"];
-const FODMAP_COLORS = ["#c0392b","#2471a3","#7d3c98","#1e8449","#b7950b","#784212"];
-const FODMAP_SHORT = ["Fru","Lac","Fra","GOS","Sor","Man"];
+const FODMAP_NAMES = ["Fructanes","GOS","Fructose","Mannitol","Sorbitol","Lactose"];
+const FODMAP_COLORS = ["#e91e8c","#e67e22","#27ae60","#2980b9","#f1c40f","#e74c3c"];
+const FODMAP_SHORT  = ["Fra","GOS","Fru","Man","Sor","Lac"];
 const CATS_DEFAULT = ["Légume","Fruit","Légumineuse","Œuf","Céréale","Laitage","Noix/Graine","Condiment","Herbe/Épice","Boisson"];
 let CATS = [...CATS_DEFAULT];
 
@@ -933,10 +949,6 @@ let currentDiviseur = 1; // diviseur de portions actif
 
 function setDiviseur(d) {
   currentDiviseur = d > 0 ? d : 1;
-  const lbl = document.getElementById('div-label');
-  if (lbl) lbl.textContent = currentDiviseur === 1
-    ? '' : `→ quantités pour 1 part sur ${currentDiviseur}`;
-  // Sync input si appelé depuis ailleurs
   const inp = document.getElementById('div-input');
   if (inp && parseFloat(inp.value) !== currentDiviseur) inp.value = currentDiviseur;
   renderRepas();
@@ -1049,6 +1061,7 @@ async function saveToGist() {
   const data = {
     db, cats: CATS, repas,
     phase3: [...excludedFodmaps],
+    menus: savedMenus,
     updated: new Date().toISOString()
   };
   try {
@@ -1107,6 +1120,7 @@ async function loadFromGist() {
     if (data.cats) { CATS = data.cats; localStorage.setItem('fodmap_cats', JSON.stringify(CATS)); }
     if (data.repas) { repas = data.repas; localStorage.setItem('fodmap_repas', JSON.stringify(repas)); }
     if (data.phase3) { excludedFodmaps = new Set(data.phase3); }
+    if (data.menus) { savedMenus = data.menus; localStorage.setItem('fodi_menus', JSON.stringify(savedMenus)); }
 
     setSyncStatus('ok', '☁️ Synchronisé');
     setTimeout(() => setSyncStatus('idle'), 3000);
@@ -1136,6 +1150,93 @@ function loadRepas() {
     if (s) repas = JSON.parse(s);
   } catch(e) {}
 }
+// ═══════════════════════════════════════════════════
+// MENUS SAUVEGARDÉS
+// ═══════════════════════════════════════════════════
+let savedMenus = {}; // {nom: {repas, diviseur}}
+
+function saveMenusData() {
+  try { localStorage.setItem('fodi_menus', JSON.stringify(savedMenus)); } catch(e){}
+  // Inclure dans la sync Gist via saveAll
+  saveAll();
+}
+function loadMenusData() {
+  try {
+    const s = localStorage.getItem('fodi_menus');
+    if (s) savedMenus = JSON.parse(s);
+  } catch(e){}
+}
+
+function renderMenusSelect() {
+  const sel = document.getElementById('menus-select');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">🍽️ Charger un menu…</option>';
+  Object.keys(savedMenus).sort().forEach(nom => {
+    const opt = document.createElement('option');
+    opt.value = nom; opt.textContent = nom;
+    sel.appendChild(opt);
+  });
+  if (current && savedMenus[current]) sel.value = current;
+}
+
+function handleMenuSelect(nom) {
+  if (!nom) return;
+  const menu = savedMenus[nom];
+  if (!menu) return;
+  // Ajouter au repas existant (pas remplacer)
+  if (menu.repas && menu.repas.length > 0) {
+    // Reconstruire les aliments depuis la DB
+    menu.repas.forEach(item => {
+      const aliment = db.find(a => a.n === item.aliment.n);
+      if (aliment) {
+        repas.push({aliment, qty: item.qty, qtyRaw: item.qtyRaw, unit: item.unit});
+      }
+    });
+    if (menu.diviseur) {
+      currentDiviseur = menu.diviseur;
+      const inp = document.getElementById('div-input');
+      if (inp) inp.value = currentDiviseur;
+    }
+    saveRepas();
+    renderRepas();
+    toast(`✅ Menu "${nom}" ajouté au repas`);
+  }
+  // Remettre le select sur "Charger un menu…"
+  setTimeout(() => {
+    const sel = document.getElementById('menus-select');
+    if (sel) sel.value = '';
+  }, 100);
+}
+
+function saveMenu() {
+  if (repas.length === 0) { toast('⚠️ Le repas est vide'); return; }
+  const nom = prompt('Nom du menu :', '');
+  if (!nom || !nom.trim()) return;
+  const nomTrim = nom.trim();
+  savedMenus[nomTrim] = {
+    repas: repas.map(({aliment, qty, qtyRaw, unit}) => ({
+      aliment: {n: aliment.n}, qty, qtyRaw, unit
+    })),
+    diviseur: currentDiviseur,
+    date: new Date().toLocaleDateString('fr-FR')
+  };
+  saveMenusData();
+  renderMenusSelect();
+  toast(`✅ Menu "${nomTrim}" sauvegardé`);
+}
+
+function deleteMenu() {
+  const sel = document.getElementById('menus-select');
+  const nom = sel ? sel.value : '';
+  if (!nom) { toast('⚠️ Sélectionnez d'abord un menu'); return; }
+  if (!confirm(`Supprimer le menu "${nom}" ?`)) return;
+  delete savedMenus[nom];
+  saveMenusData();
+  renderMenusSelect();
+  toast(`🗑️ Menu "${nom}" supprimé`);
+}
+
 function savePhase3() {
   try { localStorage.setItem('fodmap_phase3', JSON.stringify([...excludedFodmaps])); } catch(e){}
 }
@@ -1145,6 +1246,93 @@ function loadPhase3() {
     if (s) excludedFodmaps = new Set(JSON.parse(s));
   } catch(e){}
 }
+// ═══════════════════════════════════════════════════
+// MENUS SAUVEGARDÉS
+// ═══════════════════════════════════════════════════
+let savedMenus = {}; // {nom: {repas, diviseur}}
+
+function saveMenusData() {
+  try { localStorage.setItem('fodi_menus', JSON.stringify(savedMenus)); } catch(e){}
+  // Inclure dans la sync Gist via saveAll
+  saveAll();
+}
+function loadMenusData() {
+  try {
+    const s = localStorage.getItem('fodi_menus');
+    if (s) savedMenus = JSON.parse(s);
+  } catch(e){}
+}
+
+function renderMenusSelect() {
+  const sel = document.getElementById('menus-select');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">🍽️ Charger un menu…</option>';
+  Object.keys(savedMenus).sort().forEach(nom => {
+    const opt = document.createElement('option');
+    opt.value = nom; opt.textContent = nom;
+    sel.appendChild(opt);
+  });
+  if (current && savedMenus[current]) sel.value = current;
+}
+
+function handleMenuSelect(nom) {
+  if (!nom) return;
+  const menu = savedMenus[nom];
+  if (!menu) return;
+  // Ajouter au repas existant (pas remplacer)
+  if (menu.repas && menu.repas.length > 0) {
+    // Reconstruire les aliments depuis la DB
+    menu.repas.forEach(item => {
+      const aliment = db.find(a => a.n === item.aliment.n);
+      if (aliment) {
+        repas.push({aliment, qty: item.qty, qtyRaw: item.qtyRaw, unit: item.unit});
+      }
+    });
+    if (menu.diviseur) {
+      currentDiviseur = menu.diviseur;
+      const inp = document.getElementById('div-input');
+      if (inp) inp.value = currentDiviseur;
+    }
+    saveRepas();
+    renderRepas();
+    toast(`✅ Menu "${nom}" ajouté au repas`);
+  }
+  // Remettre le select sur "Charger un menu…"
+  setTimeout(() => {
+    const sel = document.getElementById('menus-select');
+    if (sel) sel.value = '';
+  }, 100);
+}
+
+function saveMenu() {
+  if (repas.length === 0) { toast('⚠️ Le repas est vide'); return; }
+  const nom = prompt('Nom du menu :', '');
+  if (!nom || !nom.trim()) return;
+  const nomTrim = nom.trim();
+  savedMenus[nomTrim] = {
+    repas: repas.map(({aliment, qty, qtyRaw, unit}) => ({
+      aliment: {n: aliment.n}, qty, qtyRaw, unit
+    })),
+    diviseur: currentDiviseur,
+    date: new Date().toLocaleDateString('fr-FR')
+  };
+  saveMenusData();
+  renderMenusSelect();
+  toast(`✅ Menu "${nomTrim}" sauvegardé`);
+}
+
+function deleteMenu() {
+  const sel = document.getElementById('menus-select');
+  const nom = sel ? sel.value : '';
+  if (!nom) { toast('⚠️ Sélectionnez d'abord un menu'); return; }
+  if (!confirm(`Supprimer le menu "${nom}" ?`)) return;
+  delete savedMenus[nom];
+  saveMenusData();
+  renderMenusSelect();
+  toast(`🗑️ Menu "${nom}" supprimé`);
+}
+
 function savePhase3() {
   try { localStorage.setItem('fodmap_phase3', JSON.stringify([...excludedFodmaps])); } catch(e){}
 }
@@ -1406,7 +1594,7 @@ document.addEventListener('click', e => {
 // ═══════════════════════════════════════════════════
 function addIngredient() {
   const nom = document.getElementById('search-input').value.trim();
-  const qtyRaw = parseFloat(document.getElementById('qty-input').value);
+  const qtyRaw = parseFloat(document.getElementById('qty-input').value.replace(',','.'));
   if (!nom) { toast("⚠️ Choisissez un ingrédient"); return; }
   if (!qtyRaw || qtyRaw <= 0) { toast("⚠️ Entrez une quantité"); return; }
   const aliment = db.find(a => a.n.toLowerCase() === nom.toLowerCase());
@@ -1428,6 +1616,37 @@ function addIngredient() {
   document.getElementById('search-input').focus();
   renderRepas();
   toast(`✅ ${nom} ajouté (${qtyRaw} ${unitLabel(unit)} = ${Math.round(qtyG)}g)`);
+}
+
+function editIngQty(idx) {
+  // Afficher le champ d'édition
+  const editRow = document.getElementById(`ing-edit-${idx}`);
+  const inp = document.getElementById(`ing-qty-inp-${idx}`);
+  if (!editRow || !inp) return;
+  const {qty, qtyRaw, unit} = repas[idx];
+  inp.value = (qtyRaw && unit && unit !== 'g') ? qtyRaw : qty;
+  editRow.style.display = 'flex';
+  inp.focus();
+  inp.select();
+}
+
+function saveIngQty(idx) {
+  const inp = document.getElementById(`ing-qty-inp-${idx}`);
+  if (!inp) return;
+  const newQtyRaw = parseFloat(inp.value.replace(',','.'));
+  if (!newQtyRaw || newQtyRaw <= 0) { toast('⚠️ Quantité invalide'); return; }
+  const {aliment, unit} = repas[idx];
+  const newQtyG = qtyToGrams(newQtyRaw, unit || 'g', aliment);
+  if ((unit === 'u') && !aliment.u) { toast('⚠️ Pas de poids unitaire — utilisez g'); return; }
+  repas[idx] = { ...repas[idx], qty: newQtyG, qtyRaw: newQtyRaw };
+  saveRepas();
+  renderRepas();
+  toast('✅ Quantité modifiée');
+}
+
+function cancelIngEdit(idx) {
+  const editRow = document.getElementById(`ing-edit-${idx}`);
+  if (editRow) editRow.style.display = 'none';
 }
 
 function removeIngredient(idx) {
@@ -1518,24 +1737,23 @@ function renderRepas() {
   });
 
   // Résultat global
-  const rc = document.getElementById('result-card');
+  // result-card supprimé
   const maxT = Math.max(...totaux);
   if (repas.length === 0) {
     rc.style.display = 'none';
     rc.className = 'result-card empty';
     rc.innerHTML = '';
   } else if (maxT > 1) {
-    rc.style.display = 'flex'; rc.className = 'result-card bad';
+    
     const exceedants = FODMAP_SHORT.filter((_,i) => totaux[i] > 1).join(', ');
-    rc.innerHTML = `<span class="result-emoji">❌</span><div class="result-text">Excès : ${exceedants}</div>`;
+    
   } else if (maxT > 0.8) {
-    rc.style.display = 'flex'; rc.className = 'result-card warn';
-    rc.innerHTML = `<span class="result-emoji">⚠️</span><div class="result-text">À la limite — évitez d'ajouter d'autres aliments riches</div>`;
+    
+    
   } else {
     const hasAnyUnknown = repas.some(({aliment:a}) => (a.unknown||[]).some(v=>v));
-    rc.style.display = 'flex'; rc.className = 'result-card ok';
-    rc.innerHTML = `<span class="result-emoji">${hasAnyUnknown ? '✅⚠️' : '✅'}</span>
-      <div class="result-text">${hasAnyUnknown ? 'OK — mais données incomplètes (?)' : 'Repas faible en FODMAP — bon appétit !'}</div>`;
+    
+    
   }
 
   // Totaux grid
@@ -1568,8 +1786,7 @@ function renderRepas() {
   const il = document.getElementById('ing-list');
   const lbl = document.getElementById('ing-label');
   lbl.style.display = repas.length > 0 ? 'block' : 'none';
-  const divBar = document.getElementById('diviseur-bar');
-  if (divBar) divBar.style.display = repas.length > 0 ? 'flex' : 'none';
+
   il.innerHTML = repas.map(({aliment:a, qty, qtyRaw, unit}, idx) => {
     const unk = a.unknown || [0,0,0,0,0,0];
     const hasUnknown = unk.some(v => v === 1);
@@ -1602,8 +1819,17 @@ function renderRepas() {
       <div class="ing-header">
         <div class="ing-name">${a.n}</div>
         ${maxLabel}
-        ${qtyDisplay}
+        <span id="ing-qty-display-${idx}">${qtyDisplay}</span>
+        <button class="ing-edit" onclick="editIngQty(${idx})" title="Modifier la quantité">✏️</button>
         <button class="ing-del" onclick="removeIngredient(${idx})">✕</button>
+      </div>
+      <div class="ing-edit-row" id="ing-edit-${idx}" style="display:none">
+        <input type="text" inputmode="decimal" class="qty-input"
+               id="ing-qty-inp-${idx}" placeholder="Nouvelle quantité"
+               style="flex:1;font-size:.85rem;font-family:var(--font)"
+               onkeydown="if(event.key==='Enter')saveIngQty(${idx})">
+        <button onclick="saveIngQty(${idx})" style="padding:5px 10px;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.85rem">✓</button>
+        <button onclick="cancelIngEdit(${idx})" style="padding:5px 8px;background:#f0f0f0;border:none;border-radius:6px;cursor:pointer;font-size:.85rem">✕</button>
       </div>
       ${(chips || unknownChips) ? `<div class="ing-fodmap-row">${chips}${unknownChips}</div>` : ''}
       ${hasUnknown ? `<div class="warn-unknown">⚠️ Données incomplètes — vérifiez cet aliment manuellement</div>` : ''}
@@ -1873,7 +2099,9 @@ loadDB();
 loadRepas();
 loadCats();
 loadPhase3();
+loadMenusData();
 renderPhase3Chips();
+renderMenusSelect();
 renderRepas();
 
 // Afficher setup si pas de token
@@ -1934,6 +2162,7 @@ function importDB() {
         if (data.cats) CATS = data.cats;
         if (data.repas) repas = data.repas;
         if (data.phase3) { excludedFodmaps = new Set(data.phase3); renderPhase3Chips(); }
+        if (data.menus) { savedMenus = data.menus; renderMenusSelect(); }
         saveAll();
         renderRepas(); renderDB();
         toast(`✅ ${data.db.length} aliments importés !`);
