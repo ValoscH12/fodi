@@ -1,7 +1,7 @@
 // Service Worker — FODMAP Analyser PWA
 // Met l'app en cache pour fonctionnement hors ligne
 
-const CACHE_NAME = 'fodi-v5';
+const CACHE_NAME = 'fodi-v6';
 const ASSETS = [
   './index.html',
   './manifest.json',
